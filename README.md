@@ -1,10 +1,21 @@
 # jarvis.nvim
 
-A neovim plugin for no agent-assisted programming. Currently supports the following models:
+Jarvis cause the term LLMs might not last the test of time. i.e. it won't
+
+A neovim plugin for no *agent*-assisted programming. Currently supports the following models:
 - LLMS: [local, OpenAI, Anthropic]
 
 Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim)
 
+The main features/differences:
+- the ui. 
+    - this is an extension to [telescope](https://github.com/nvim-telescope/telescope.nvim)
+    - this lets you open a floating window, type prompts, and also neatly seperates user prompts and responses. it's just streamlining the process.
+    - *You can still use the file format if you'd like*.
+- you can also fuzzy find previous sessions easily and open/swap between them quickly
+    - fuzzy find by content
+    - fuzzy find by filename (it stores a registry of all previous .md files so you can open them across folders. you can clear this cache)
+- also there's support for local and api models
 
 ### Installation
 
@@ -90,6 +101,23 @@ vim.keymap.set("n", "g.", function() require("llm").prompt_operatorfunc({ replac
 
 ### Roadmap
 - your mom
+
+### notes
+ok flow will look something like this:
+- <c-llm> will open the preview pane
+- this will open the prompt at the bottom with the previously used session at the top (or wherever)
+- you will then either do 4 things:
+    1. type a prompt
+    1. hit <c-c> or just <CR> enter the chat history and copy something
+    1. hit <c-s> to open a search to find a previous filename/session
+    1. hit <c-f> to open a search to find a previous session based on content
+- The last 3 are self-explanatory.
+- The first one, when you click <CR> on your prompt, it will auto-navigate you to the chat history window
+    - each prompt will be seperated by blocks so you can navigate with `[` and `]` and copy
+- The other option is that you don't store a chat history, and each session is spawned/deleted
+    - in this case, opening the preview would create a buffer, and you could continue to prompt and even select code blocks to replace by v selecting and prompting again, and then you could copy the whole buffer and go back to your document
+- similarly, maybe hitting like <ctrl-y> will copy and paste the buffer back into your previous cursor position or something, and if you were selecting something, it would replace it all
+- to get out of the chat window, hit escape. the chat window is visual mode only, escape again will close the window
 
 ### Credits
 
