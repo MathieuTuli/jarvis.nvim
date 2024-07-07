@@ -1,4 +1,3 @@
-print("Loading Jarvis")
 local _G = {}
 local _L = {}
 local Utils = require("jarvis.utils")
@@ -14,26 +13,30 @@ _L.history_bufnr = nil
 _L.history_winid = nil
 _L.session_type = nil
 _L.session_timestamp = nil
+_L.history_lines_to_clear = { first = nil, last = nil }
 
 function _G.setup()
     if _L.session_timestamp == nil then
         _L.session_timestamp = os.date("%Y-%m-%d %H:%M:%S")
     end
-    print(_L.session_timestamp)
 end
 
--- TODO : don't close buffer for optimization
--- TODO : bug where if you open prompt session, prompt, the :q from history, the next interaction is cleared (duh)
---      : to fix, only clear the latest text added to the buffer, not the whole buffer
-function _L.clear_history()
-    if _L.history_bufnr ~= nil and _L.session_type == "prompt" then
-        local line_count = vim.api.nvim_buf_line_count(_L.history_bufnr)
-        vim.api.nvim_buf_set_lines(_L.history_bufnr, 0, line_count, false, {})
+-- TODO : don't close buffer for optimization?
+-- TODO : first line of copied visual block is empty - annoying me
+function _L.clear_buffer(bufnr, bAll)
+    local first, last = 0, 0
+    if bAll then
+        last = vim.api.nvim_buf_line_count(bufnr)
+    elseif _L.history_lines_to_clear.first == nil or _L.history_lines_to_clear.last == nil then
+        return
+    end
+    if (_L.history_bufnr ~= nil and _L.session_type == "prompt") then
+        vim.api.nvim_buf_set_lines(bufnr, first, last, false, {})
     end
 end
 
 function _L.close()
-    _L.clear_history()
+    _L.clear_buffer(_L.history_bufnr, false)
     vim.api.nvim_buf_delete(_L.history_bufnr, { force = true })
     _L.layout:unmount()
 end
@@ -69,7 +72,11 @@ end
 
 function _L.forward(history_bufnr, prompt_bufnr)
     local response = LLM.forward(history_bufnr, prompt_bufnr)
-    Utils.stream_table_to_buffer(history_bufnr, response)
+    Utils.stream_to_buffer(history_bufnr, "\n# Response")
+    Utils.stream_to_buffer(history_bufnr, response)
+    _L.history_lines_to_clear.first = nil
+    _L.history_lines_to_clear.last = nil
+    _L.clear_buffer(prompt_bufnr, true)
     _L.save_buffer(history_bufnr)
     _L.refresh_display()
 end
@@ -144,14 +151,17 @@ function _G.interact(type)
     _L.refresh_display()
     if type == "prompt" then
         if _L.parent_visual_selection ~= nil then
-            Utils.stream_table_to_buffer(_L.history_bufnr, _L.parent_visual_selection)
-        else
-            Utils.stream_text_to_buffer(_L.history_bufnr, Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
+            local lines_altered = Utils.stream_to_buffer(_L.history_bufnr, "\n# Context")
+            _L.history_lines_to_clear.first = lines_altered.first
+            lines_altered = Utils.stream_to_buffer(_L.history_bufnr, _L.parent_visual_selection)
+            _L.history_lines_to_clear.last = lines_altered.last
+        elseif "your" == "mom" then
+            Utils.stream_to_buffer(_L.history_bufnr, Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
         end
     end
     -- unmount component when cursor leaves buffer BufWinLeav BufHidden
     history:on(event.BufHidden, function()
-        _L.clear_history()
+        _L.clear_buffer(_L.history_bufnr, false)
     end)
 
     -- PROMPT COMMANDS

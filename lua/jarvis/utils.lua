@@ -1,13 +1,24 @@
 local _G = {}
 
-function _G.stream_table_to_buffer(bufnr, table)
+function _G.stream_to_buffer(bufnr, content)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         error("Invalid buffer number: " .. bufnr)
         return
     end
+    if type(content) == "string" then
+        content = vim.split(content, '\n')
+    end
     local line_count = vim.api.nvim_buf_line_count(bufnr)
-    print("lc", line_count)
-    vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, table)
+    -- TODO : this is dangerous af idk
+    --      : as long as my shit is always > 1 lines
+    if line_count == 1 then
+        line_count = 0
+    end
+    vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, content) 
+    return {
+        first = line_count,
+        last = vim.api.nvim_buf_line_count(bufnr)
+    }
 end
 
 function _G.stream_text_to_buffer(bufnr, text)
