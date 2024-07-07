@@ -14,16 +14,17 @@ The main features/differences:
     - *You can still use the file format if you'd like*.
 
 ### TODO
+1. make history window readonly during response stream
 1. fuzzy find previous sessions easily and open/swap between them quickly
     - fuzzy find by content
     - fuzzy find by filename (it stores a registry of all previous .md files so you can open them across folders. you can clear this cache)
 1. support for local models
-1. TODO : don't close buffer for optimization?
+1. don't close buffer for optimization?
 1. Check on hacked solution to first line formatting problem
-1. TODO : cache cleanup
-1. TODO : format the context/prompt/response shit (based on models? xml? json? md?)
-1. TODO : copy/paste/confirm response
-1. TODO : look at the link for how to unmount and clean everything
+1. cache cleanup
+1. format the context/prompt/response shit (based on models? xml? json? md?)
+1. ~~copy/paste/confirm response~~
+1. look at the link for how to unmount and clean everything
 
 ### Installation
 
