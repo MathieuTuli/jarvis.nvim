@@ -27,21 +27,24 @@ function _G.write_config(config)
 end
 
 function _G.get_stored_chat_filename()
-    local config = read_config()
+    if not _G.file_exists(_G.config_path) then
+        return nil
+    end
+    local config = _G.read_config()
     return config.last_chat_filename
 end
 
 function _G.update_stored_chat_filename(new_filename)
-    local config = read_config()
+    local config = _G.read_config()
     config.last_chat_filename = new_filename
-    write_config(config)
+    _G.write_config(config)
 end
 
 function _G.file_exists(path)
     return vim.fn.filereadable(path) == 1
 end
 
-function _G.create_new_chat()
+function _G.new_chat_filename()
     local date_time = os.date("%Y-%m-%d_%H-%M-%S")
     local filename = date_time .. ".md"
 
@@ -57,11 +60,11 @@ function _G.create_new_chat()
             file:close()
         end
     end
-    vim.cmd("badd " .. full_path)
-    return filename
+    _G.update_stored_chat_filename(full_path)
+    return full_path
 end
 
-function _G.get_prompt_history(session_timestamp, bufnr)
+function _G.get_prompt_history_filename(session_timestamp, bufnr)
     assert(session_timestamp ~= nil)
     local dir = string.format("%s/prompts/%s/", _G.root, session_timestamp)
     if vim.fn.isdirectory(dir) == 0 then
@@ -74,7 +77,7 @@ function _G.get_prompt_history(session_timestamp, bufnr)
             file:close()
         end
     end
-    vim.cmd("badd " .. full_path)
+    -- vim.cmd("badd " .. full_path)
     return full_path
 end
 

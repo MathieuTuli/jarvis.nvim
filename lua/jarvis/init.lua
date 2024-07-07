@@ -22,7 +22,15 @@ function _G.setup()
 end
 
 -- TODO : don't close buffer for optimization?
--- TODO : first line of copied visual block is empty - annoying me
+-- ~~TODO : first line of copied visual block is empty - annoying me
+--          : okay but I hacked a solution - check on that
+-- TODO : cleanup name of prompt/history bufnr/winid?
+-- TODO : cache cleanup
+-- TODO : format the context/prompt/response shit (based on models? xml? json? md?)
+-- TODO : actually fill the llm backend
+-- ~~TODO : function to create a new chat
+-- TODO : copy/paste/confirm response
+-- TODO : look at the link for how to unmount and clean everything
 function _L.clear_buffer(bufnr, bAll)
     local first, last = 0, 0
     if bAll then
@@ -38,28 +46,47 @@ end
 function _L.close()
     _L.clear_buffer(_L.history_bufnr, false)
     vim.api.nvim_buf_delete(_L.history_bufnr, { force = true })
+    _L.history_bufnr = nil
     _L.layout:unmount()
+end
+
+function _L.open_history_buffer(fname)
+    -- local fname = IO.new_chat_filename()
+    vim.cmd("badd " .. fname)
+    local new_bufnr = vim.fn.bufnr(fname)
+    -- Depending on when this gets executed, this may not be open yet
+    if _L.history_popup ~= nil and _L.history_popup.winid ~= nil then
+        _L.history_popup.bufnr = new_bufnr
+        vim.api.nvim_win_set_buf(_L.history_popup.winid, new_bufnr)
+    end
+    -- if _L.history_bufnr ~= nil then
+    --     _L.clear_buffer(_L.history_bufnr, false)
+    --     vim.api.nvim_buf_delete(_L.history_bufnr, { force = true })
+    -- end
+    _L.history_bufnr = new_bufnr
 end
 
 function _L.get_current_interaction(type)
     local fname = nil
     _L.session_type = type
     if type == "chat" then
-        print("Chatting...")
-        if IO.file_exists(IO.config_path) then
-            fname = _L.get_stored_chat_filename()
-        else
-            fname = IO.create_new_chat()
+        fname = IO.get_stored_chat_filename()
+        print("stored", fname)
+        if fname == nil then
+            fname = IO.new_chat_filename()
+            print("was nil so", fname)
         end
-        _L.history_bufnr = vim.fn.bufnr(fname)
+        -- _L.history_bufnr = vim.fn.bufnr(fname)
     elseif type == "prompt" then
-        print("Asking...")
-        fname = IO.get_prompt_history(_L.session_timestamp, _L.parent_bufnr)
-        _L.history_bufnr = vim.fn.bufnr(fname)
+        fname = IO.get_prompt_history_filename(_L.session_timestamp, _L.parent_bufnr)
+        print("prompt", fname)
+        -- _L.history_bufnr = vim.fn.bufnr(fname)
     else
         error("Unknown interaction type")
         return nil
     end
+    print("final", fname)
+    _L.open_history_buffer(fname)
     return _L.history_bufnr
 end
 
@@ -85,13 +112,12 @@ function _L.refresh_display()
     local line_count = vim.api.nvim_buf_line_count(_L.history_bufnr)
     vim.api.nvim_win_set_cursor(_L.history_winid, {line_count, 0})
 end
-
 function _G.interact(type)
     _L.parent_bufnr = vim.api.nvim_get_current_buf()
     _L.parent_window = vim.api.nvim_get_current_win()
     _L.parent_visual_selection = Utils.get_visual_selection(_L.parent_bufnr)
     local curr_history_bufnr = _L.get_current_interaction(type)
-    local history = Popup({
+    _L.history_popup = Popup({
         border = {
             style = "rounded",
             padding = { 0, 0 },
@@ -112,7 +138,7 @@ function _G.interact(type)
         },
     })
     vim.bo[curr_history_bufnr].filetype = "markdown"
-    local prompt = Popup({
+    local prompt_popup = Popup({
         enter = true,
         focusable = true,
         border = {
@@ -141,13 +167,13 @@ function _G.interact(type)
             },
         },
         Layout.Box({
-            Layout.Box(history, { size = "90%" }),
-            Layout.Box(prompt, { size = "10%" }),
+            Layout.Box(_L.history_popup, { size = "90%" }),
+            Layout.Box(prompt_popup, { size = "10%" }),
         }, { dir = "col" })
     )
 
     _L.layout:mount()
-    _L.history_winid = history.winid
+    _L.history_winid = _L.history_popup.winid
     _L.refresh_display()
     if type == "prompt" then
         if _L.parent_visual_selection ~= nil then
@@ -160,25 +186,23 @@ function _G.interact(type)
         end
     end
     -- unmount component when cursor leaves buffer BufWinLeav BufHidden
-    history:on(event.BufHidden, function()
+    _L.history_popup:on(event.BufHidden, function()
         _L.clear_buffer(_L.history_bufnr, false)
     end)
 
     -- PROMPT COMMANDS
-    prompt:map("n", "<esc>", function(bufnr)
-        print("ESC pressed in Normal mode!")
+    prompt_popup:map("n", "<esc>", function(bufnr)
         _L.close()
     end, { noremap = true })
 
-    prompt:map("n", "<C-s>", function(bufnr)
-        vim.api.nvim_set_current_win(history.winid)
+    prompt_popup:map("n", "<C-s>", function(bufnr)
+        _L.vim.api.nvim_set_current_win(_L.history_popup.winid)
     end, { noremap = true })
-    prompt:map("i", "<C-s>", function(bufnr)
-        vim.api.nvim_set_current_win(history.winid)
+    prompt_popup:map("i", "<C-s>", function(bufnr)
+        vim.api.nvim_set_current_win(_L.history_popup.winid)
     end, { noremap = true })
 
-    prompt:map("n", "<C-x>", function(bufnr)
-        print("Prompting LLM")
+    prompt_popup:map("n", "<C-x>", function(bufnr)
         -- 1. prompt LLM
         --      1. either use chat history + up to cursor
         --      2. either have selected text from orginal buffer
@@ -187,42 +211,41 @@ function _G.interact(type)
         -- 2. clear popup buffer
         -- 3. append stream to buffer of chat
         -- 4. if <C-y> - paste latest stream to original buffer
-        _L.forward(_L.history_bufnr, prompt.bufnr)
-        vim.api.nvim_set_current_win(history.winid)
+        _L.forward(_L.history_bufnr, prompt_popup.bufnr)
+        -- vim.api.nvim_set_current_win(_L.history_popup.winid)
         -- layout:unmount()
     end, { noremap = true })
-    prompt:map("v", "<C-x>", function(bufnr)
-        print("Prompting LLM")
-        _L.forward(_L.history_bufnr, prompt.bufnr)
-        vim.api.nvim_set_current_win(history.winid)
+    prompt_popup:map("v", "<C-x>", function(bufnr)
+        _L.forward(_L.history_bufnr, prompt_popup.bufnr)
+        -- vim.api.nvim_set_current_win(_L.history_popup.winid)
         -- layout:unmount()
     end, { noremap = true })
-    prompt:map("i", "<C-x>", function(bufnr)
-        print("Prompting LLM")
-        _L.forward(_L.history_bufnr, prompt.bufnr)
-        vim.api.nvim_set_current_win(history.winid)
+    prompt_popup:map("i", "<C-x>", function(bufnr)
+        _L.forward(_L.history_bufnr, prompt_popup.bufnr)
+        -- vim.api.nvim_set_current_win(_L.history_popup.winid)
         -- layout:unmount()
     end, { noremap = true })
 
-    prompt:map("n", "<C-y>", function(bufnr)
-        print("Paste results LLM")
+    prompt_popup:map("n", "<C-y>", function(bufnr)
         _L.layout:unmount()
+    end, { noremap = true })
+
+    prompt_popup:map("n", "<C-n>", function(bufnr)
+        _L.open_history_buffer(IO.new_chat_filename())
     end, { noremap = true })
 
     -- HISTORY COMMANDS
     -- chat:map("n", "<esc>", function(bufnr)
-    --     print("ESC pressed in Normal mode!")
     --     layout:unmount()
     -- end, { noremap = true })
-    history:map("n", "<C-s>", function(bufnr)
-        vim.api.nvim_set_current_win(prompt.winid)
+    _L.history_popup:map("n", "<C-s>", function(bufnr)
+        vim.api.nvim_set_current_win(prompt_popup.winid)
     end, { noremap = true })
-    history:map("i", "<C-s>", function(bufnr)
-        vim.api.nvim_set_current_win(prompt.winid)
+    _L.history_popup:map("i", "<C-s>", function(bufnr)
+        vim.api.nvim_set_current_win(prompt_popup.winid)
     end, { noremap = true })
 
-    history:map("v", "<C-y>", function(bufnr)
-        print("Paste results LLM")
+    _L.history_popup:map("v", "<C-y>", function(bufnr)
         _L.layout:unmount()
     end, { noremap = true })
 end
