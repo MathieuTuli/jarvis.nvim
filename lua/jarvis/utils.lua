@@ -1,9 +1,21 @@
 local _G = {}
 
+function _G.stream_to_buffer_at_cursor(winid, content)
+    local cursor_position = vim.api.nvim_win_get_cursor(winid)
+    local row, col = cursor_position[1], cursor_position[2]
+
+    local lines = vim.split(content, '\n')
+    vim.api.nvim_put(lines, 'c', true, true)
+
+    local num_lines = #lines
+    local last_line_length = #lines[num_lines]
+    vim.api.nvim_win_set_cursor(winid, { row + num_lines - 1, col + last_line_length })
+end
+
 function _G.stream_to_buffer(bufnr, content)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         error("Invalid buffer number: " .. bufnr)
-        return
+        return { first = nil, last = nil }
     end
     if type(content) == "string" then
         content = vim.split(content, '\n')
@@ -14,7 +26,7 @@ function _G.stream_to_buffer(bufnr, content)
     if line_count == 1 then
         line_count = 0
     end
-    vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, content) 
+    vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, content)
     return {
         first = line_count,
         last = vim.api.nvim_buf_line_count(bufnr)
@@ -78,11 +90,36 @@ function _G.get_visual_selection(bufnr)
         end
         for i = srow, erow do
             table.insert(lines,
-            vim.api.nvim_buf_get_text(bufnr, i - 1, math.min(scol - 1, ecol), i - 1, math.max(scol - 1, ecol), {})[1])
+                vim.api.nvim_buf_get_text(bufnr, i - 1, math.min(scol - 1, ecol), i - 1, math.max(scol - 1, ecol), {})
+                [1])
         end
         return lines
     end
     return nil
+end
+
+function _G.clear_buffer(bufnr, lines_to_clear)
+    local first, last = 0, 0
+    if lines_to_clear == nil then
+        last = vim.api.nvim_buf_line_count(bufnr)
+    elseif lines_to_clear.first == nil or lines_to_clear.last == nil then
+        return
+    end
+    if bufnr ~= nil then
+        vim.api.nvim_buf_set_lines(bufnr, first, last, false, {})
+    end
+end
+
+function _G.save_buffer(bufnr)
+    local current_bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_set_current_buf(bufnr)
+    vim.api.nvim_command('write')
+    vim.api.nvim_set_current_buf(current_bufnr)
+end
+
+function _G.move_cursor_to_bottom(winid, bufnr)
+    local line_count = vim.api.nvim_buf_line_count(bufnr)
+    vim.api.nvim_win_set_cursor(winid, { line_count, 0 })
 end
 
 return _G

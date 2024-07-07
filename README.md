@@ -9,13 +9,21 @@ Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim)
 
 The main features/differences:
 - the ui. 
-    - this is an extension to [telescope](https://github.com/nvim-telescope/telescope.nvim)
+    - this uses [nui](https://github.com/MunifTanjim/nui.nvim)
     - this lets you open a floating window, type prompts, and also neatly seperates user prompts and responses. it's just streamlining the process.
     - *You can still use the file format if you'd like*.
-- you can also fuzzy find previous sessions easily and open/swap between them quickly
+
+### TODO
+1. fuzzy find previous sessions easily and open/swap between them quickly
     - fuzzy find by content
     - fuzzy find by filename (it stores a registry of all previous .md files so you can open them across folders. you can clear this cache)
-- also there's support for local and api models
+1. support for local models
+1. TODO : don't close buffer for optimization?
+1. Check on hacked solution to first line formatting problem
+1. TODO : cache cleanup
+1. TODO : format the context/prompt/response shit (based on models? xml? json? md?)
+1. TODO : copy/paste/confirm response
+1. TODO : look at the link for how to unmount and clean everything
 
 ### Installation
 
@@ -33,76 +41,24 @@ use({
 
 Configure the plugin. This can be omitted to use the default configuration.
 
+Somewhere else in your `init.lua` or in my case I have it in `~/.config/nvim/after/plugin/jarvis.lua` (basically somewhere that will run when you run nvim)
 ```lua
-require('llm').setup({
-    -- How long to wait for the request to start returning data.
-    timeout_ms = 10000, -- if using a local model, this does nothing
-    root = nil, -- set to a path to indicate where to store auto-created .md files
-    -- by default = true : jarvis.nvim is like Telescope, it opens a windows to speak to it
-    -- the window:
-      -- always opens to the last conversation
-      -- if there's a local .md file, it will open that
-      -- you can start a new conversation with key commands (see below)
-      -- every latest response is copied to clip if flag (below) is true
-      -- otherwise, you can easily select the text you want copied
-    windowed = true, 
-    copy_to_clip = false,
-    services = {
-        -- Supported services configured by default
-        -- openai = {
-        --     url = "https://api.openai.com/v1/chat/completions",
-        --     model = "gpt-4o",
-        --     api_key_name = "OPENAI_API_KEY",
-        -- },
-        -- anthropic = {
-        --     url = "https://api.anthropic.com/v1/messages",
-        --     model = "claude-3-5-sonnet-20240620",
-        --     api_key_name = "ANTHROPIC_API_KEY",
-        -- },
-
-        -- Extra OpenAI-compatible services to add (optional)
-        -- other_provider = {
-        --     url = "https://example.com/other-provider/v1/chat/completions",
-        --     model = "llama3",
-        --     api_key_name = "OTHER_PROVIDER_API_KEY",
-        -- }
-    }
-})
+require("jarvis").setup() -- this is critical for session-timestamping
 ```
 
-**`prompt()`**
-
-Triggers the LLM assistant.
-- Optionally pass `replace` flag to replace the current selection with the LLM's response. The prompt is either the visually selected text or the file content up to the cursor if no selection is made.
-
-**`create_llm_md()`**
-
-Creates a new `llm.md` file in the `root` directory, where you can write questions or prompts for the LLM.
-- Optionally takes a `path` or `name` to overwrite the default `root` path or set a filename.
-
-**Example Bindings**
+**`keymaps`**
+There are two main interactions:
+- `chat` : open a turn-based styled chat like regular ChatGPT
+- `prompt` : open a one-off prompt window to ask a specific question
+    - each time you open neovim, a timestamp is recorded, so the prompt history will persist for your entire session until the neovim process is killed
+    - each buffer (i.e. file) will be bound to its own specific prompt history. you can thus navigate to new files and open prompts for each, and return to those buffers later to continue if you like (as long as it's in the same neovim process)
+    - this window will also copy your visual selection from the current file, otherwise there won't be any copied context
 ```lua
-vim.keymap.set("n", "<leader>m", function() require("llm").create_llm_md() end)
-
--- keybinds for prompting with groq
-vim.keymap.set("n", "<leader>,", function() require("llm").prompt({ replace = false, service = "groq" }) end)
-vim.keymap.set("v", "<leader>,", function() require("llm").prompt({ replace = false, service = "groq" }) end)
-vim.keymap.set("v", "<leader>.", function() require("llm").prompt({ replace = true, service = "groq" }) end)
-
--- keybinds for prompting with openai
-vim.keymap.set("n", "<leader>g,", function() require("llm").prompt({ replace = false, service = "openai" }) end)
-vim.keymap.set("v", "<leader>g,", function() require("llm").prompt({ replace = false, service = "openai" }) end)
-vim.keymap.set("v", "<leader>g.", function() require("llm").prompt({ replace = true, service = "openai" }) end)
-
--- keybinds to support vim motions
-vim.keymap.set("n", "g,", function() require("llm").prompt_operatorfunc({ replace = false, service = "groq" }) end)
-vim.keymap.set("n", "g.", function() require("llm").prompt_operatorfunc({ replace = true, service = "groq" }) end)
+-- there are two types of interactions: chat and prompting
+vim.keymap.set({ 'n', 'v' }, '<leader>lc', function() require("jarvis").interact("chat") end, { desc = 'chat with jarvis' })
+vim.keymap.set({ 'n', 'v' }, '<leader>la', function() require("jarvis").interact("prompt") end, { desc = 'prompt jarvis' })
 ```
-
-### Roadmap
-- your mom
-
-### notes
+### dev notes
 ok flow will look something like this:
 - <c-llm> will open the preview pane
 - this will open the prompt at the bottom with the previously used session at the top (or wherever)
@@ -121,4 +77,4 @@ ok flow will look something like this:
 
 ### Credits
 
-- Obviously [yacine](https://twitter.com/i/broadcasts/1kvJpvRPjNaKE)/[yacine](https://github.com/yacineMTB/llm.nvim) and [melbadove](https://github.com/melbaldove/llm.nvim)
+- [yacine](https://twitter.com/i/broadcasts/1kvJpvRPjNaKE)/[yacine](https://github.com/yacineMTB/llm.nvim) and [melbadove](https://github.com/melbaldove/llm.nvim)
