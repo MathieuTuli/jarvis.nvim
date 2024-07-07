@@ -46,7 +46,7 @@ function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prom
     Utils.stream_to_buffer(history_bufnr, "\n# Prompt")
     Utils.stream_to_buffer(history_bufnr, prompt_lines)
     Utils.stream_to_buffer(history_bufnr, "\n# Response\n")
-    Utils.clear_buffer(prompt_bufnr, nil)
+    Utils.clear_buffer(prompt_bufnr)
     vim.api.nvim_set_current_win(history_winid)
     Utils.move_cursor_to_bottom(history_winid, history_bufnr)
 

@@ -7,7 +7,6 @@ local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 local event = require("nui.utils.autocmd").event
 
-_L.session_type = nil
 _L.session_timestamp = nil
 _L.history_lines_to_clear = { first = nil, last = nil }
 
@@ -27,7 +26,7 @@ end
 -- TODO : copy/paste/confirm response
 -- TODO : look at the link for how to unmount and clean everything
 function _L.close()
-    Utils.clear_buffer(_L.history_popup.bufnr, _L.history_lines_to_clear)
+    Utils.clear_changes(_L.history_popup.winid)
     vim.api.nvim_buf_delete(_L.history_popup.bufnr, { force = true })
     _L.history_popup.bufnr = nil
     _L.layout:unmount()
@@ -46,7 +45,6 @@ end
 
 function _L.get_current_interaction(type)
     local fname = nil
-    _L.session_type = type
     if type == "chat" then
         fname = IO.get_stored_chat_filename()
         if fname == nil then
@@ -121,8 +119,8 @@ function _G.interact(type)
             position = "50%",
             relative = "editor",
             size = {
-                width = "70%",
-                height = "80%",
+                width = "90%",
+                height = "90%",
             },
         },
         Layout.Box({
@@ -132,49 +130,43 @@ function _G.interact(type)
     )
 
     _L.layout:mount()
-    Utils.move_cursor_to_bottom(_L.history_popup.winid, _L.history_popup.bufnr)
-    if type == "prompt" then
-        if _L.parent_visual_selection ~= nil then
-            local lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, "\n# Context")
-            _L.history_lines_to_clear.first = lines_altered.first
-            lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, _L.parent_visual_selection)
-            _L.history_lines_to_clear.last = lines_altered.last
-        elseif "your" == "mom" then
-            Utils.stream_to_buffer(_L.history_popup.bufnr,
-                Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
-        end
+
+    if _L.parent_visual_selection ~= nil then
+        local lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, "\n# Context")
+        _L.history_lines_to_clear.first = lines_altered.first
+        lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, _L.parent_visual_selection)
+        _L.history_lines_to_clear.last = lines_altered.last
+    elseif "your" == "mom" then
+        Utils.stream_to_buffer(_L.history_popup.bufnr,
+            Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
     end
+
+    Utils.move_cursor_to_bottom(_L.history_popup.winid, _L.history_popup.bufnr)
+
     -- PROMPT COMMANDS
     _L.prompt_popup:map("n", "<esc>", function(bufnr) _L.close() end, { noremap = true })
 
-    _L.prompt_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
-        { noremap = true })
+    _L.prompt_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end, { noremap = true })
+    _L.prompt_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end, { noremap = true })
 
-    _L.prompt_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
-        { noremap = true })
+    _L.history_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end, { noremap = true })
+    _L.history_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end, { noremap = true })
 
-    _L.prompt_popup:map("n", "<C-x>", function(bufnr)
-        _L.forward()
+    _L.prompt_popup:map("n", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
+    _L.prompt_popup:map("v", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
+    _L.prompt_popup:map("i", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
+
+    _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end, { noremap = true })
+
+    -- _L.prompt_popup:map("n", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
+    _L.history_popup:map("v", "<C-y>", function(bufnr)
+        Utils.copy_to_clipboard(Utils.get_visual_selection(_L.history_popup.bufnr))
+        _L.layout:unmount()
     end, { noremap = true })
-
-    _L.prompt_popup:map("v", "<C-x>", function(bufnr) _L.forward() end, { noremap = true })
-    _L.prompt_popup:map("i", "<C-x>", function(bufnr) _L.forward() end, { noremap = true })
-    _L.prompt_popup:map("n", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
-
-    _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end,
-        { noremap = true })
-
-    -- HISTORY COMMANDS
-    _L.history_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
-        { noremap = true })
-
-    _L.history_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
-        { noremap = true })
-
-    _L.history_popup:map("v", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
     -- unmount component when cursor leaves buffer BufWinLeav BufHidden
-    _L.history_popup:on(event.BufHidden,
-        function() Utils.clear_buffer(_L.history_popup.bufnr, _L.history_lines_to_clear) end)
+    _L.history_popup:on(event.BufHidden, function()
+        Utils.clear_changes(_L.history_popup.winid)
+    end)
 end
 
 return _G

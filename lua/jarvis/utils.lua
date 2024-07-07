@@ -98,13 +98,27 @@ function _G.get_visual_selection(bufnr)
     return nil
 end
 
-function _G.clear_buffer(bufnr, lines_to_clear)
-    local first, last = 0, 0
-    if lines_to_clear == nil then
-        last = vim.api.nvim_buf_line_count(bufnr)
-    elseif lines_to_clear.first == nil or lines_to_clear.last == nil then
-        return
+function _G.copy_to_clipboard(content)
+    if content then
+        if type(content) == "table" then
+            content = table.concat(content, "\n")
+        end
+        vim.fn.setreg('+', content)
     end
+end
+
+function _G.clear_changes(winid)
+    local current_win = vim.api.nvim_get_current_win()
+    local current_buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_set_current_win(winid)
+    vim.cmd('edit!')
+    vim.api.nvim_set_current_win(current_win)
+    vim.api.nvim_set_current_buf(current_buf)
+end
+
+function _G.clear_buffer(bufnr)
+    local first = 0
+    local last = vim.api.nvim_buf_line_count(bufnr)
     if bufnr ~= nil then
         vim.api.nvim_buf_set_lines(bufnr, first, last, false, {})
     end
