@@ -24,7 +24,7 @@ The main features/differences:
 1. cache cleanup
 1. format the context/prompt/response shit (based on models? xml? json? md?)
 1. ~~copy/paste/confirm response~~
-1. look at the link for how to unmount and clean everything
+1. look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
 
 ### Installation
 
