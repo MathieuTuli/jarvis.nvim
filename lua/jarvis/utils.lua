@@ -43,6 +43,13 @@ function _G.stream_text_to_buffer(bufnr, text)
     vim.api.nvim_buf_set_lines(bufnr, line_count, line_count, false, lines)
 end
 
+function _G.get_buffer_fname(bufnr)
+    local absolute_path = vim.api.nvim_buf_get_name(bufnr)
+    local cwd = vim.fn.getcwd()
+    local relative_path = absolute_path:gsub("^" .. vim.pesc(cwd .. "/"), "")
+    return relative_path
+end
+
 function _G.get_lines_until_cursor(window, bufnr)
     if not vim.api.nvim_buf_is_valid(bufnr) then
         error("Invalid buffer number: " .. bufnr)

@@ -74,12 +74,15 @@ function _G.interact(type)
     _L.history_lines_to_clear.last = nil
     _L.parent_visual_selection = Utils.get_visual_selection(_L.parent_bufnr)
     local curr_history_bufnr = _L.get_current_interaction(type)
+
+    local fname = Utils.get_buffer_fname(_L.parent_bufnr)
+
     _L.history_popup = Popup({
         border = {
             style = "rounded",
             padding = { 0, 0 },
             text = {
-                top = "/History/",
+                top = type == "chat" and "/Chat History/" or "/../" .. fname .. " History/",
                 top_align = "center",
             },
         },
@@ -146,17 +149,22 @@ function _G.interact(type)
     -- PROMPT COMMANDS
     _L.prompt_popup:map("n", "<esc>", function(bufnr) _L.close() end, { noremap = true })
 
-    _L.prompt_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end, { noremap = true })
-    _L.prompt_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end, { noremap = true })
+    _L.prompt_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
+        { noremap = true })
+    _L.prompt_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
+        { noremap = true })
 
-    _L.history_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end, { noremap = true })
-    _L.history_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end, { noremap = true })
+    _L.history_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
+        { noremap = true })
+    _L.history_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
+        { noremap = true })
 
     _L.prompt_popup:map("n", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
     _L.prompt_popup:map("v", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
     _L.prompt_popup:map("i", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
 
-    _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end, { noremap = true })
+    _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end,
+        { noremap = true })
 
     -- _L.prompt_popup:map("n", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
     _L.history_popup:map("v", "<C-y>", function(bufnr)

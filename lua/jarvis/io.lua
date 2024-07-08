@@ -61,7 +61,7 @@ function _G.new_chat_filename()
         end
     end
     _G.update_stored_chat_filename(full_path)
-    return full_path
+    return filename
 end
 
 function _G.get_prompt_history_filename(session_timestamp, bufnr)
