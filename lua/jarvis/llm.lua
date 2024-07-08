@@ -3,6 +3,8 @@ local Job = require("plenary.job")
 local Utils = require("jarvis.utils")
 
 local active_job = nil
+_G.data_handler = function(data_stream) error("Undefined function. See README for setup.") end
+_G.make_curl_args = function(history, prompt) error("Undefined function. See README for setup.") end
 function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prompt_winid, prompt_bufnr)
     local history_lines = vim.api.nvim_buf_get_lines(history_bufnr, 0, -1, false)
     local prompt_lines = vim.api.nvim_buf_get_lines(prompt_bufnr, 0, -1, false)
@@ -14,7 +16,7 @@ function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prom
     Utils.move_cursor_to_bottom(history_winid, history_bufnr)
 
     -- TODO HANDLE SYSTEM PROMPT
-    local args = opts.make_curl_args(table.concat(history_lines, "\n"), table.concat(prompt_lines, "\n"))
+    local args = _G.make_curl_args(table.concat(history_lines, "\n"), table.concat(prompt_lines, "\n"))
 
     local function parse_and_call(line)
         print(line)
@@ -24,7 +26,7 @@ function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prom
         end
         local data_match = line:match '^data: (.+)$'
         if data_match then
-            local content = opts.data_handler(data_match)
+            local content = _G.data_handler(data_match)
             if content then
                 vim.schedule(function()
                     Utils.stream_to_buffer_at_cursor(history_winid, content)
