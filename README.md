@@ -1,30 +1,40 @@
 # jarvis.nvim
 
-Jarvis cause the term LLMs might not last the test of time. i.e. it won't
+I've decided to stop trying to find cool names for things and just copy Tony. Jarvis cause you know right away what it might be. Jarvis cause the term LLMs might not last the test of time.
 
 A neovim plugin for no *agent*-assisted programming. Currently supports the following models:
-- LLMS: [local, OpenAI, Anthropic]
+- LLMS: OpenAI
 
-Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim)
+Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim) and [yacine](https://github.com/yacineMTB/dingllm.nvim).
 
 The main features/differences:
 - the ui. 
     - this uses [nui](https://github.com/MunifTanjim/nui.nvim)
     - this lets you open a floating window, type prompts, and also neatly seperates user prompts and responses. it's just streamlining the process.
-    - *You can still use the file format if you'd like*.
+- Chat vs. prompting
+    - Seperates workflows, allowing for a normal turn-style chat interaction or a one-off, file-bound prompting session.
 
 ### TODO
+1. support for other models:
+    - Local
+    - Anthropic
+    - Groq
+1. add configurable options
+    - model url
+    - window sizing
+    - whether to jump into history window or stay in prompt
+    - cache size
+    - session persistance (currently bound to neovim process, should it be bound by filepath?)
+1. job cancel
 1. make history window readonly during response stream
-1. fuzzy find previous sessions easily and open/swap between them quickly
+1. fuzzy find previous interactions easily and open/swap between them quickly
     - fuzzy find by content
     - fuzzy find by filename (it stores a registry of all previous .md files so you can open them across folders. you can clear this cache)
-1. support for local models
-1. don't close buffer for optimization?
-1. Check on hacked solution to first line formatting problem
+1. check on hacked solution to first line formatting problem
 1. cache cleanup
 1. format the context/prompt/response shit (based on models? xml? json? md?)
-1. ~~copy/paste/confirm response~~
 1. look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
+1. ~~copy/paste/confirm response~~
 
 ### Installation
 
