@@ -16,15 +16,6 @@ function _G.setup()
     end
 end
 
--- TODO : don't close buffer for optimization?
--- ~~TODO : first line of copied visual block is empty - annoying me
---          : okay but I hacked a solution - check on that
--- TODO : cache cleanup
--- TODO : format the context/prompt/response shit (based on models? xml? json? md?)
--- ~~TODO : actually fill the llm backend
--- ~~TODO : function to create a new chat
--- TODO : copy/paste/confirm response
--- TODO : look at the link for how to unmount and clean everything
 function _L.close()
     Utils.clear_changes(_L.history_popup.winid)
     vim.api.nvim_buf_delete(_L.history_popup.bufnr, { force = true })
