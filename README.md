@@ -1,41 +1,18 @@
 # jarvis.nvim
 
-I've decided to stop trying to find cool names for things and just copy Tony. Jarvis cause you know right away what it might be. Jarvis cause the term LLMs might not last the test of time.
-
-A neovim plugin for *agent*-assisted programming. Currently supports models based on [dingllm](https://github.com/yacineMTB/dingllm.nvim), see [usage](#usage) for an example.
+A Neovim plugin for LLM prompting and chatting. Not a copilot.
 
 Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim) and [yacine](https://github.com/yacineMTB/dingllm.nvim).
 
 The main features/differences:
-- The ui. 
-    - This uses [nui](https://github.com/MunifTanjim/nui.nvim)
-    - This lets you open a floating window, type prompts, and neatly separate user prompts and responses. It's just streamlining the process.
+- The UI ([nui](https://github.com/MunifTanjim/nui.nvim)): streamlined popup-based interaction. Background-managed files.
 - Chat vs. prompting
     - Separates workflows, allowing for a normal turn-style chat interaction or a one-off, file-bound prompting session.
 
-### TODO
-1. Default support for models?
-    - Local
-    - Anthropic
-    - Groq
-1. Add configurable options
-    - Window sizing
-    - Whether to jump into the history window or stay in the prompt window
-    - Session persistence (currently bound to neovim process, should file path bind it?)
-    - key-commands
-1. Job cancel
-1. Make history window read-only during response stream
-1. Fuzzy find previous interactions easily and open/swap between them quickly
-    - fuzzy find by content
-    - fuzzy find by filename
-1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
-1. Cache cleanup
-1. Look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
-1. ~~copy/paste/confirm response~~
+### Installation and Usage
 
-### Installation
 
-For `packer.nvim` (I'm sure you can figure it out if you use `lazy`)
+1. **`packer.nvim`**
 ```lua
 use({'MathieuTuli/jarvis.nvim',
     requires = { 'nvim-lua/plenary.nvim', 'MunifTanjim/nui.nvim' },
@@ -43,13 +20,11 @@ use({'MathieuTuli/jarvis.nvim',
 
 ```
 
-### Usage
+2. **`setup()`**
 
-**`setup()`**
+Default: `requires("jarvis").setup()` to accept the default OpenAI gpt-4o backend.
 
-You can call `requires("jarvis").setup()` to accept the default API handler. Below is a copy of the default handler.
-
-Somewhere else in your `init.lua` or in my case I have it in `~/.config/nvim/after/plugin/jarvis.lua` (basically somewhere that will run when you run nvim)
+Custom (copied default handler for example purposes): 
 ```lua
 local model_name = "gpt-4o"
 local url = "https://api.openai.com/v1/chat/completions"
@@ -88,9 +63,11 @@ require("jarvis").setup({
     make_curl_args=make_openai_curl_args,
 })
 ```
-Checkout [yacine](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
+Check out [yacine](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
 
-**`keymaps`**
+Note that changing the system prompt currently means copying all that and updating the prompt. Same goes for any other settings.
+
+3. **`keymaps`**
 There are two main interactions:
 - `chat` : open a turn-based styled chat like regular ChatGPT
 - `prompt` : open a one-off prompt window to ask a specific question
@@ -102,6 +79,26 @@ There are two main interactions:
 vim.keymap.set({ 'n', 'v' }, '<leader>lc', function() require("jarvis").interact("chat") end, { desc = 'chat with jarvis' })
 vim.keymap.set({ 'n', 'v' }, '<leader>la', function() require("jarvis").interact("prompt") end, { desc = 'prompt jarvis' })
 ```
+
+### TODO
+1. Default support for models?
+    - Local
+    - Anthropic
+    - Groq
+1. Add configurable options
+    - Window sizing
+    - Whether to jump into the history window or stay in the prompt window
+    - Session persistence (currently bound to neovim process, should file path bind it?)
+    - key-commands
+1. Job cancel
+1. Make history window read-only during response stream
+1. Fuzzy find previous interactions easily and open/swap between them quickly
+    - fuzzy find by content
+    - fuzzy find by filename
+1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
+1. Cache cleanup
+1. Look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
+1. ~~copy/paste/confirm response~~
 
 ### Credits
 
