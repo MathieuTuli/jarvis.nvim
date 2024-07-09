@@ -98,7 +98,7 @@ map("n", "<C-n>", "create new chat")
 
 -- In History Buffer
 map({"n", "i"}, "<C-s>", "switch to prompt buffer")
-map("v", "<C-y>", "copy to clipboard and close window"
+map("v", "<C-y>", "copy to clipboard and close window")
 ```
 
 ### TODO
