@@ -71,17 +71,34 @@ Check out [dingllm](https://github.com/yacineMTB/dingllm.nvim) if you want examp
 
 Note that changing the system prompt currently means copying all that and updating the prompt. Same goes for any other settings.
 
-3. **`keymaps`**
+3. **`open`**
 There are two main interactions:
-- `chat` : open a turn-based styled chat like regular ChatGPT
-- `prompt` : open a one-off prompt window to ask a specific question
-    - each time you open neovim, a timestamp is recorded, so the prompt history will persist for your entire session until the neovim process is killed
-    - each buffer (i.e. file) will be bound to its own specific prompt history. you can thus navigate to new files and open prompts for each, and return to those buffers later to continue if you like (as long as it's in the same neovim process)
-    - this window will also copy your visual selection from the current file, otherwise there won't be any copied context
+- `chat`: open a turn-based styled chat like regular ChatGPT
+    - persistent
+- `prompt`: open a prompt session
+    - not persistent
+    - file-specific
+
+Both will copy the current visual selection.
 ```lua
 -- there are two types of interactions: chat and prompting
 vim.keymap.set({ 'n', 'v' }, '<leader>lc', function() require("jarvis").interact("chat") end, { desc = 'chat with jarvis' })
 vim.keymap.set({ 'n', 'v' }, '<leader>la', function() require("jarvis").interact("prompt") end, { desc = 'prompt jarvis' })
+```
+
+4. **`keymaps`**
+   
+The following keymaps are currently fixed, I plan to make this configurable soon.
+```lua
+-- In Prompt Buffer
+map("n", "<esc>", "close")
+map({"n", "i"}, "<C-s>", "switch to history buffer")
+map({"n", "v", "i"}, "<C-e>", "invoke model")
+map("n", "<C-n>", "create new chat")
+
+-- In History Buffer
+map({"n", "i"}, "<C-s>", "switch to prompt buffer")
+map("v", "<C-y>", "copy to clipboard and close window"
 ```
 
 ### TODO
