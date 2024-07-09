@@ -2,7 +2,7 @@
 
 A Neovim plugin for LLM prompting and chatting. Not a copilot.
 
-Based on [melbaldove/jarvis.nvim](https://github.com/melbaldove/llm.nvim) and [yacine](https://github.com/yacineMTB/dingllm.nvim).
+Based on [melbaldove/llm.nvim](https://github.com/melbaldove/llm.nvim) and [yacine/dingllm](https://github.com/yacineMTB/dingllm.nvim).
 
 The main features/differences:
 - The UI ([nui](https://github.com/MunifTanjim/nui.nvim)): streamlined popup-based interaction. Background-managed files.
@@ -65,7 +65,7 @@ require("jarvis").setup({
     make_curl_args=make_openai_curl_args,
 })
 ```
-Check out [yacine](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
+Check out [dingllm](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
 
 Note that changing the system prompt currently means copying all that and updating the prompt. Same goes for any other settings.
 
