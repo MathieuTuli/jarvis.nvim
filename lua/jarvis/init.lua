@@ -11,13 +11,16 @@ _L.session_timestamp = nil
 _L.history_lines_to_clear = { first = nil, last = nil }
 
 function _G.setup(opts)
+    opts = opts or nil
     if _L.session_timestamp == nil then
         _L.session_timestamp = os.date("%Y-%m-%d %H:%M:%S")
     end
     -- TODO this doesn't do anything right now
-    IO.cache_limit = opts.cache_limit
-    LLM.data_handler = opts.data_handler
-    LLM.make_curl_args = opts.make_curl_args
+    if opts then
+        IO.cache_limit = opts.cache_limit
+        LLM.data_handler = opts.data_handler
+        LLM.make_curl_args = opts.make_curl_args
+    end
 end
 
 function _L.close()
