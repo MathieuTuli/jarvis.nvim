@@ -111,7 +111,7 @@ map("v", "<C-y>", "copy to clipboard and close window")
     - Whether to jump into the history window or stay in the prompt window
     - Session persistence (currently bound to neovim process, should file path bind it?)
     - key-commands
-1. Job cancel
+1. Job cancel + don't run job if prompt is empty
 1. Make history window read-only during response stream
 1. Fuzzy find previous interactions easily and open/swap between them quickly
     - fuzzy find by content
