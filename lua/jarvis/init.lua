@@ -132,7 +132,7 @@ function _G.interact(type)
 
     _L.layout:mount()
 
-    if _L.parent_visual_selection ~= nil then
+    if _L.parent_visual_selection then
         local lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, "\n# Context")
         _L.history_lines_to_clear.first = lines_altered.first
         lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, _L.parent_visual_selection)
