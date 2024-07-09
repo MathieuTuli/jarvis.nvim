@@ -4,10 +4,12 @@ A Neovim plugin for LLM prompting and chatting. Not a copilot.
 
 Based on [melbaldove/llm.nvim](https://github.com/melbaldove/llm.nvim) and [yacine/dingllm](https://github.com/yacineMTB/dingllm.nvim).
 
-The main features/differences:
+The main features:
 - The UI ([nui](https://github.com/MunifTanjim/nui.nvim)): streamlined popup-based interaction. Background-managed files.
 - Chat vs. prompting
     - Separates workflows, allowing for a normal turn-style chat interaction or a one-off, file-bound prompting session.
+
+ I learned lua last week and made this in a weekend, doubt it's stable. Open issues and feature requests I'll tackle them as they come.
 
 https://github.com/MathieuTuli/jarvis.nvim/assets/20361597/5ad65e06-a710-404c-aa83-8c88ab5010f4
 
