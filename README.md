@@ -5,7 +5,8 @@ A Neovim plugin for LLM prompting and chatting. Not a copilot.
 Based on [melbaldove/llm.nvim](https://github.com/melbaldove/llm.nvim) and [yacine/dingllm](https://github.com/yacineMTB/dingllm.nvim).
 
 The main features:
-- The UI ([nui](https://github.com/MunifTanjim/nui.nvim)): streamlined popup-based interaction. Background-managed files.
+- The UI ([nui](https://github.com/MunifTanjim/nui.nvim)): streamlined popup-based interaction
+- Background-managed files
 - Chat vs. prompting
     - Separates workflows, allowing for a normal turn-style chat interaction or a one-off, file-bound prompting session.
 
@@ -28,7 +29,7 @@ use({'MathieuTuli/jarvis.nvim',
 
 Default: `requires("jarvis").setup()` to accept the default OpenAI gpt-4o backend.
 
-Custom (copied default handler for example purposes): 
+Custom (copied from [lua/jarvis/llm.lua](lua/jarvis/llm.lua)  - default handler for example purposes): 
 ```lua
 local model_name = "gpt-4o"
 local url = "https://api.openai.com/v1/chat/completions"
@@ -69,9 +70,9 @@ require("jarvis").setup({
 ```
 Check out [dingllm](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
 
-Note that changing the system prompt currently means copying all that and updating the prompt. Same goes for any other settings.
+Note that changing the system prompt currently means copying all that and updating the prompt. The same goes for any other settings.
 
-3. **`open`**
+3. **`usage`**
 There are two main interactions:
 - `chat`: open a turn-based styled chat like regular ChatGPT
     - persistent
