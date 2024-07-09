@@ -27,7 +27,7 @@ use({'MathieuTuli/jarvis.nvim',
 
 2. **`setup()`**
 
-Default: `requires("jarvis").setup()` to accept the default OpenAI gpt-4o backend.
+Default: `require("jarvis").setup()` to accept the default OpenAI gpt-4o backend.
 
 Custom (copied from [lua/jarvis/llm.lua](lua/jarvis/llm.lua)  - default handler for example purposes): 
 ```lua
