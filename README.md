@@ -9,8 +9,10 @@ The main features/differences:
 - Chat vs. prompting
     - Separates workflows, allowing for a normal turn-style chat interaction or a one-off, file-bound prompting session.
 
-### Installation and Usage
+https://github.com/MathieuTuli/jarvis.nvim/assets/20361597/5ad65e06-a710-404c-aa83-8c88ab5010f4
 
+
+### Installation and Usage
 
 1. **`packer.nvim`**
 ```lua
