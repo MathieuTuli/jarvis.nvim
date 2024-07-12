@@ -108,7 +108,7 @@ map("v", "<C-y>", "copy to clipboard and close window")
     - Anthropic
     - Groq
 1. Add configurable options
-    - Window sizing
+    - ~~Window sizing~~
     - ~~Session persistence (currently bound to neovim process, should file path bind it?)~~
     - key-commands
 1. Job cancel + don't run job if prompt is empty + let job run in background buffre if you close window while its streaming
@@ -118,9 +118,9 @@ map("v", "<C-y>", "copy to clipboard and close window")
     - fuzzy find by filename
 1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
 1. Look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
-1. Make prompt style persistent
 
 ### Fixed
+1. ~~Make prompt style persistent~~
 1. ~~Debug that issue where a chat file gets created in the cwd~~
 1. ~~Cache cleanup~~
 1. ~~copy/paste/confirm response~~

@@ -9,7 +9,13 @@ local event = require("nui.utils.autocmd").event
 
 _L.prompt_line_count = 0
 _L.history_lines_to_clear = { first = nil, last = nil }
-
+_L.keymaps = {
+    close = "<esc>",
+    new_chat = "<C-n>",
+    switch_window = "<C-s>",
+    run = "<C-e>",
+    copy_and_close = "<C-y>"
+}
 
 function _G.setup(opts)
     if IO.session_timestamp == nil then
@@ -21,6 +27,9 @@ function _G.setup(opts)
     if opts.persistent_prompt_history then IO.persistent_prompt_history = opts.persistent_prompt_history end
     if opts.data_handler then LLM.data_handler = opts.data_handler end
     if opts.make_curl_args then LLM.make_curl_args = opts.make_curl_args end
+    for key, _ in pairs(_L.keymaps) do
+        if opts.keymaps[key] then _L.keymaps[key] = opts.keymaps[key] end
+    end
     assert(type(IO.cache_limit) == "number", "cache_limit must be a number")
     assert(type(IO.prune_after) == "number", "prune_after must be a number")
     assert(type(opts.data_handler) == "function", "data_handler must be a function")
@@ -151,39 +160,33 @@ function _G.interact(type)
     Utils.move_cursor_to_bottom(_L.history_popup.winid, _L.history_popup.bufnr)
 
     -- PROMPT COMMANDS
-    _L.prompt_popup:map("n", "<esc>", function(bufnr) _L.close() end, { noremap = true })
+    local function register_keymap(popup, modes, keymap, fcn, noremap)
+        noremap = noremap or true
+        for _, mode in ipairs(modes) do
+            popup:map(mode, keymap, fcn, { noremap = noremap })
+        end
+    end
+    register_keymap(_L.prompt_popup, { "n" }, _L.keymaps.close, function(bufnr) _L.close() end)
+    register_keymap(_L.history_popup, { "n" }, _L.keymaps.close, function(bufnr) _L.close() end)
 
-    _L.prompt_popup:map("n", "<C-s>", function(bufnr)
+    register_keymap(_L.prompt_popup, { "n", "i", "v" }, _L.keymaps.switch, function(bufnr) 
         vim.api.nvim_command('stopinsert')
         vim.api.nvim_set_current_win(_L.history_popup.winid)
-    end, { noremap = true })
-    _L.prompt_popup:map("i", "<C-s>", function(bufnr)
-        vim.api.nvim_command('stopinsert')
-        vim.api.nvim_set_current_win(_L.history_popup.winid)
-    end, { noremap = true })
-
-    _L.history_popup:map("n", "<C-s>", function(bufnr)
+    end)
+    register_keymap(_L.history_popup, { "n", "i", "v" }, _L.keymaps.switch, function(bufnr) 
         vim.api.nvim_command('stopinsert')
         vim.api.nvim_set_current_win(_L.prompt_popup.winid)
-    end, { noremap = true })
-    _L.history_popup:map("i", "<C-s>", function(bufnr)
-        vim.api.nvim_command('stopinsert')
-        vim.api.nvim_set_current_win(_L.prompt_popup.winid)
-    end, { noremap = true })
+    end)
 
-    _L.prompt_popup:map("n", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
-    _L.prompt_popup:map("v", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
-    _L.prompt_popup:map("i", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
+    register_keymap(_L.prompt_popup, { "n", "i", "v" }, _L.keymaps.run, function(bufnr) _L.forward() end)
 
-    _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end,
-    { noremap = true })
+    register_keymap(_L.prompt_popup, { "n" }, _L.keymaps.new_chat, function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end)
 
-    -- _L.prompt_popup:map("n", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
-    _L.history_popup:map("v", "<C-y>", function(bufnr)
+    register_keymap(_L.history_popup, { "v" }, _L.keymaps.copy_and_close, function(bufnr)
         Utils.copy_to_clipboard(Utils.get_visual_selection(_L.history_popup.bufnr))
-        -- _L.layout:unmount()
         _L.close()
-    end, { noremap = true })
+    end)
+
     -- unmount component when cursor leaves buffer BufWinLeav BufHidden
     _L.history_popup:on(event.BufHidden, function()
         Utils.clear_changes(_L.history_popup.winid)
