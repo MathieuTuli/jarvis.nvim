@@ -143,7 +143,6 @@ keymaps = {
 ### TODO
 1. Job cancel + don't run job if prompt is empty + let job run in background buffre if you close window while its streaming
 1. Make history window read-only during response stream
-1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
 1. Fuzzy find previous interactions easily and open/swap between them quickly
     - fuzzy find by content
     - fuzzy find by filename
@@ -155,6 +154,7 @@ keymaps = {
     - Groq
 
 ### Fixed
+1. ~~Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)~~
 1. Add configurable options
     - ~~Window sizing~~
     - ~~Session persistence (currently bound to neovim process, should file path bind it?)~~
