@@ -27,13 +27,15 @@ function _G.setup(opts)
     if opts.persistent_prompt_history then IO.persistent_prompt_history = opts.persistent_prompt_history end
     if opts.data_handler then LLM.data_handler = opts.data_handler end
     if opts.make_curl_args then LLM.make_curl_args = opts.make_curl_args end
-    for key, _ in pairs(_L.keymaps) do
-        if opts.keymaps[key] then _L.keymaps[key] = opts.keymaps[key] end
+    if opts.keymaps then
+        for key, _ in pairs(_L.keymaps) do
+            if opts.keymaps[key] then _L.keymaps[key] = opts.keymaps[key] end
+        end
     end
     assert(type(IO.cache_limit) == "number", "cache_limit must be a number")
     assert(type(IO.prune_after) == "number", "prune_after must be a number")
-    assert(type(opts.data_handler) == "function", "data_handler must be a function")
-    assert(type(opts.make_curl_args) == "function", "make_curl_args must be a function")
+    assert(type(LLM.data_handler) == "function", "data_handler must be a function")
+    assert(type(LLM.make_curl_args) == "function", "make_curl_args must be a function")
 end
 
 function _L.close()
@@ -148,7 +150,7 @@ function _G.interact(type)
     _L.layout:mount()
 
     if _L.parent_visual_selection then
-        local lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, "\n# Context")
+        local lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, "\n# $$BLOCK$$ Context")
         _L.history_lines_to_clear.first = lines_altered.first
         lines_altered = Utils.stream_to_buffer(_L.history_popup.bufnr, _L.parent_visual_selection)
         _L.history_lines_to_clear.last = lines_altered.last

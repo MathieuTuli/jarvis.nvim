@@ -34,7 +34,11 @@ Custom (copied from [lua/jarvis/llm.lua](lua/jarvis/llm.lua)  - default handler 
 local model_name = "gpt-4o"
 local url = "https://api.openai.com/v1/chat/completions"
 local api_key_name = "OPENAI_API_KEY"
-local system_prompt = "You are my helpful assistant coder. Try to be as non-verbose as possible and stick to the important things. Avoid describing your code unnecessarily, I only want you to output code mainly and limit describing it."
+local system_prompt = [[
+You are my helpful assistant coder.
+Try to be as non-verbose as possible and stick to the important things.
+Avoid describing your own code unnecessarily, I only want you to output code mainly and limit describing it.
+]]
 
 local function openai_data_handler(data_stream)
     if data_stream:match '"delta":' then
@@ -46,9 +50,21 @@ local function openai_data_handler(data_stream)
 end
 
 local function make_openai_curl_args(history, prompt)
+    -- ARGS 
+    -- history: a table of {{role=..., content=...}} 
+    --          role: can be either "assistant" or "user"
+    --          content: is a string of the relevant content
+    -- prompt: is the string of the current prompt
     local api_key = os.getenv(api_key_name)
+    local messages = {
+        { role = 'system', content = system_prompt },
+    }
+    for _, row in ipairs(history) do
+        table.insert(messages, { role=row.role, content=row.content })
+    end
+    table.insert(messages, { role='user', content=prompt })
     local data = {
-        messages = { { role = 'system', content = system_prompt }, { role = 'user', content = history .. prompt } },
+        messages = messages,
         model = model_name,
         temperature = 0.7,
         stream = true,
