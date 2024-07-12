@@ -191,6 +191,12 @@ function _G.interact(type)
     _L.history_popup:on(event.BufHidden, function()
         Utils.clear_changes(_L.history_popup.winid)
     end)
+    _L.history_popup:on(event.TabLeave, function()
+        _L.close()
+    end)
+    _L.prompt_popup:on(event.TabLeave, function()
+        _L.close()
+    end)
     local function update_layout()
         local lines = vim.api.nvim_buf_get_lines(_L.prompt_popup.bufnr, 0, -1, false)
         local current_line_count = #lines
@@ -214,6 +220,7 @@ function _G.interact(type)
         end
     end
     _L.prompt_popup:on(event.TextChangedI, function() update_layout() end)
+    _L.prompt_popup:on(event.TextChanged, function() update_layout() end)
     _L.prompt_popup:on(event.TextChanged, function() update_layout() end)
 end
 
