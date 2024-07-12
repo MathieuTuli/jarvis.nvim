@@ -6,6 +6,8 @@ local _G = {}
 -- SETUP
 _G.prune_after = 30
 _G.cache_limit = 1000
+_G.session_timestamp = nil
+_G.persistent_prompt_history = true
 _G.root = vim.fn.stdpath('data') .. "/jarvis/"
 if vim.fn.isdirectory(_G.root) == 0 then
     vim.fn.mkdir(_G.root, "p")
@@ -75,14 +77,20 @@ function _G.new_chat_filename()
     return full_path
 end
 
-function _G.get_prompt_history_filename(session_timestamp, bufnr)
-    assert(session_timestamp ~= nil)
+function _G.get_prompt_history_filename(bufnr)
+    assert(_G.session_timestamp ~= nil)
     _G.count_files_and_cleanup({ _G.root .. "/chats/", _G.root .. "/prompts/" })
-    local dir = string.format("%s/prompts/%s/", _G.root, session_timestamp)
+    local dir, full_path = nil, nil
+    if _G.persistent_prompt_history then
+        dir = string.format("%s/prompts/%s/", _G.root, "persistent")
+        full_path = dir .. vim.api.nvim_buf_get_name(bufnr):gsub("/", "__") .. ".md"
+    else
+        dir = string.format("%s/prompts/%s/", _G.root, _G.session_timestamp)
+        full_path = dir .. bufnr .. ".md"
+    end
     if vim.fn.isdirectory(dir) == 0 then
         vim.fn.mkdir(dir, "p")
     end
-    local full_path = dir .. bufnr .. ".md"
     if vim.fn.filereadable(full_path) == 0 then
         local file = io.open(full_path, "w")
         if file then

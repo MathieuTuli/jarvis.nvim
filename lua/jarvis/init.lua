@@ -7,16 +7,16 @@ local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 local event = require("nui.utils.autocmd").event
 
-_L.session_timestamp = nil
 _L.history_lines_to_clear = { first = nil, last = nil }
 
 function _G.setup(opts)
-    if _L.session_timestamp == nil then
-        _L.session_timestamp = os.date("%Y-%m-%d %H:%M:%S")
+    if IO.session_timestamp == nil then
+        IO.session_timestamp = os.date("%Y-%m-%d %H:%M:%S")
     end
     -- TODO this doesn't do anything right now
     if opts.cache_limit then IO.cache_limit = opts.cache_limit end
     if opts.prune_after then IO.prune_after = opts.prune_after end
+    if opts.persistent_prompt_history then IO.persistent_prompt_history = opts.persistent_prompt_history end
     if opts.data_handler then LLM.data_handler = opts.data_handler end
     if opts.make_curl_args then LLM.make_curl_args = opts.make_curl_args end
     assert(type(IO.cache_limit) == "number", "cache_limit must be a number")
@@ -53,7 +53,7 @@ function _L.get_current_interaction(type)
         end
         -- _L.history_popup.bufnr = vim.fn.bufnr(fname)
     elseif type == "prompt" then
-        fname = IO.get_prompt_history_filename(_L.session_timestamp, _L.parent_bufnr)
+        fname = IO.get_prompt_history_filename(_L.parent_bufnr)
     else
         return nil
     end
