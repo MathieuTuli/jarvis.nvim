@@ -63,9 +63,18 @@ local function make_openai_curl_args(history, prompt)
 end
 
 require("jarvis").setup({
-    cache_limit=1000,
+    -- below are the defaults
     data_handler=openai_data_handler,
     make_curl_args=make_openai_curl_args,
+    prune_after = 30,
+    cache_limit = 1000,
+    keymaps = {
+        close = "<esc>", -- close the ui
+        new_chat = "<C-n>", -- create new persistent, file-agnostic chat file
+        switch_window = "<C-s>", -- switch between prompt and history window
+        run = "<C-e>", -- run model
+        copy_and_close = "<C-y>" -- copy visual selection in history window and close
+    },
 })
 ```
 Check out [dingllm](https://github.com/yacineMTB/dingllm.nvim) if you want examples for other models.
@@ -89,37 +98,49 @@ vim.keymap.set({ 'n', 'v' }, '<leader>la', function() require("jarvis").interact
 
 4. **`keymaps`**
    
-The following keymaps are currently fixed, I plan to make this configurable soon.
+The following keymaps are configurable.
 ```lua
--- In Prompt Buffer
-map("n", "<esc>", "close")
-map({"n", "i"}, "<C-s>", "switch to history buffer")
-map({"n", "v", "i"}, "<C-e>", "invoke model")
-map("n", "<C-n>", "create new chat")
+keymaps = {
+    -- desc: close the ui, from prompt or history buffer
+    -- modes: n
+    close = "<esc>",
 
--- In History Buffer
-map({"n", "i"}, "<C-s>", "switch to prompt buffer")
-map("v", "<C-y>", "copy to clipboard and close window")
+    -- desc: create new file-agnostic chat, from prompt buffer only
+    -- modes: n
+    new_chat = "<C-n>",
+
+    -- desc: toggle between prompt and history buffers
+    -- modes: n, i, v
+    switch_window = "<C-s>",
+
+    -- desc: run the model, from prompt buffer only
+    -- modes: n, i, v
+    run = "<C-e>",
+
+    -- desc: copy the current visual selection in history buffer and close ui
+    -- modes: n
+    copy_and_close = "<C-y>"
+}
 ```
 
 ### TODO
-1. Default support for models?
-    - Local
-    - Anthropic
-    - Groq
-1. Add configurable options
-    - ~~Window sizing~~
-    - ~~Session persistence (currently bound to neovim process, should file path bind it?)~~
-    - key-commands
 1. Job cancel + don't run job if prompt is empty + let job run in background buffre if you close window while its streaming
 1. Make history window read-only during response stream
+1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
 1. Fuzzy find previous interactions easily and open/swap between them quickly
     - fuzzy find by content
     - fuzzy find by filename
-1. Improve prompt history formatting (format the context/prompt/response shit based on models? xml? json? md?)
 1. Look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
+1. Default support for models?
+- Local
+- Anthropic
+- Groq
 
 ### Fixed
+1. Add configurable options
+    - ~~Window sizing~~
+    - ~~Session persistence (currently bound to neovim process, should file path bind it?)~~
+    - ~~key-commands~~
 1. ~~Make prompt style persistent~~
 1. ~~Debug that issue where a chat file gets created in the cwd~~
 1. ~~Cache cleanup~~
