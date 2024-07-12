@@ -47,6 +47,7 @@ function _L.get_current_interaction(type)
     local fname = nil
     if type == "chat" then
         fname = IO.get_stored_chat_filename()
+        print(fname)
         if fname == nil then
             fname = IO.new_chat_filename()
         end
