@@ -40,7 +40,7 @@ function _G.get_stored_chat_filename()
     end
     local config = _G.read_config()
     local fname = config.last_chat_filename
-    if vim.loop.fs_stat(fname) ~= nil then
+    if vim.loop.fs_stat(fname) == nil then
         fname = _G.new_chat_filename()
     end
     return config.last_chat_filename
@@ -78,13 +78,13 @@ function _G.new_chat_filename()
 end
 
 function _G.get_prompt_history_filename(bufnr)
-    assert(_G.session_timestamp ~= nil)
     _G.count_files_and_cleanup({ _G.root .. "/chats/", _G.root .. "/prompts/" })
     local dir, full_path = nil, nil
     if _G.persistent_prompt_history then
         dir = string.format("%s/prompts/%s/", _G.root, "persistent")
         full_path = dir .. vim.api.nvim_buf_get_name(bufnr):gsub("/", "__") .. ".md"
     else
+        assert(_G.session_timestamp ~= nil)
         dir = string.format("%s/prompts/%s/", _G.root, _G.session_timestamp)
         full_path = dir .. bufnr .. ".md"
     end

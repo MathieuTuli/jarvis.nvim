@@ -7,7 +7,9 @@ local Layout = require("nui.layout")
 local Popup = require("nui.popup")
 local event = require("nui.utils.autocmd").event
 
+_L.prompt_line_count = 0
 _L.history_lines_to_clear = { first = nil, last = nil }
+
 
 function _G.setup(opts)
     if IO.session_timestamp == nil then
@@ -26,6 +28,8 @@ function _G.setup(opts)
 end
 
 function _L.close()
+    _L.prompt_line_count = 0
+    _L.history_lines_to_clear = { first = nil, last = nil }
     Utils.clear_changes(_L.history_popup.winid)
     vim.api.nvim_buf_delete(_L.history_popup.bufnr, { force = true })
     _L.history_popup.bufnr = nil
@@ -47,7 +51,6 @@ function _L.get_current_interaction(type)
     local fname = nil
     if type == "chat" then
         fname = IO.get_stored_chat_filename()
-        print(fname)
         if fname == nil then
             fname = IO.new_chat_filename()
         end
@@ -62,8 +65,8 @@ end
 
 function _L.forward()
     LLM.get_response_and_stream_to_buffer(
-        _L.history_popup.winid, _L.history_popup.bufnr,
-        _L.prompt_popup.winid, _L.prompt_popup.bufnr)
+    _L.history_popup.winid, _L.history_popup.bufnr,
+    _L.prompt_popup.winid, _L.prompt_popup.bufnr)
     _L.history_lines_to_clear.first = nil
     _L.history_lines_to_clear.last = nil
 end
@@ -119,18 +122,18 @@ function _G.interact(type)
         },
     })
     _L.layout = Layout(
-        {
-            position = "50%",
-            relative = "editor",
-            size = {
-                width = "90%",
-                height = "90%",
-            },
+    {
+        position = "50%",
+        relative = "editor",
+        size = {
+            width = "90%",
+            height = "90%",
         },
-        Layout.Box({
-            Layout.Box(_L.history_popup, { size = "90%" }),
-            Layout.Box(_L.prompt_popup, { size = "10%" }),
-        }, { dir = "col" })
+    },
+    Layout.Box({
+        Layout.Box(_L.history_popup, { grow = 1 }),
+        Layout.Box(_L.prompt_popup, { size = { width = "100%", height = 3 } }),
+    }, { dir = "col" })
     )
 
     _L.layout:mount()
@@ -142,7 +145,7 @@ function _G.interact(type)
         _L.history_lines_to_clear.last = lines_altered.last
     elseif "your" == "mom" then
         Utils.stream_to_buffer(_L.history_popup.bufnr,
-            Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
+        Utils.get_lines_until_cursor(_L.parent_window, _L.parent_bufnr))
     end
 
     Utils.move_cursor_to_bottom(_L.history_popup.winid, _L.history_popup.bufnr)
@@ -150,32 +153,65 @@ function _G.interact(type)
     -- PROMPT COMMANDS
     _L.prompt_popup:map("n", "<esc>", function(bufnr) _L.close() end, { noremap = true })
 
-    _L.prompt_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
-        { noremap = true })
-    _L.prompt_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.history_popup.winid) end,
-        { noremap = true })
+    _L.prompt_popup:map("n", "<C-s>", function(bufnr)
+        vim.api.nvim_command('stopinsert')
+        vim.api.nvim_set_current_win(_L.history_popup.winid)
+    end, { noremap = true })
+    _L.prompt_popup:map("i", "<C-s>", function(bufnr)
+        vim.api.nvim_command('stopinsert')
+        vim.api.nvim_set_current_win(_L.history_popup.winid)
+    end, { noremap = true })
 
-    _L.history_popup:map("n", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
-        { noremap = true })
-    _L.history_popup:map("i", "<C-s>", function(bufnr) vim.api.nvim_set_current_win(_L.prompt_popup.winid) end,
-        { noremap = true })
+    _L.history_popup:map("n", "<C-s>", function(bufnr)
+        vim.api.nvim_command('stopinsert')
+        vim.api.nvim_set_current_win(_L.prompt_popup.winid)
+    end, { noremap = true })
+    _L.history_popup:map("i", "<C-s>", function(bufnr)
+        vim.api.nvim_command('stopinsert')
+        vim.api.nvim_set_current_win(_L.prompt_popup.winid)
+    end, { noremap = true })
 
     _L.prompt_popup:map("n", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
     _L.prompt_popup:map("v", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
     _L.prompt_popup:map("i", "<C-e>", function(bufnr) _L.forward() end, { noremap = true })
 
     _L.prompt_popup:map("n", "<C-n>", function(bufnr) _L.open_history_buffer(IO.new_chat_filename()) end,
-        { noremap = true })
+    { noremap = true })
 
     -- _L.prompt_popup:map("n", "<C-y>", function(bufnr) _L.layout:unmount() end, { noremap = true })
     _L.history_popup:map("v", "<C-y>", function(bufnr)
         Utils.copy_to_clipboard(Utils.get_visual_selection(_L.history_popup.bufnr))
-        _L.layout:unmount()
+        -- _L.layout:unmount()
+        _L.close()
     end, { noremap = true })
     -- unmount component when cursor leaves buffer BufWinLeav BufHidden
     _L.history_popup:on(event.BufHidden, function()
         Utils.clear_changes(_L.history_popup.winid)
     end)
+    local function update_layout()
+        local lines = vim.api.nvim_buf_get_lines(_L.prompt_popup.bufnr, 0, -1, false)
+        local current_line_count = #lines
+        current_line_count = math.min(15, current_line_count - 1)
+        if current_line_count ~= _L.prompt_line_count then
+            _L.prompt_line_count = current_line_count
+            _L.layout:update(
+            {
+                position = "50%",
+                relative = "editor",
+                size = {
+                    width = "90%",
+                    height = "90%",
+                },
+            },
+            Layout.Box({
+                Layout.Box(_L.history_popup, { grow = 1 }),
+                Layout.Box(_L.prompt_popup, { size = { width = "100%", height = 3 + current_line_count}})
+            }, { dir = "col" })
+            )
+        end
+    end
+    _L.prompt_popup:on(event.TextChangedI, function() update_layout() end)
+    _L.prompt_popup:on(event.TextChanged, function() update_layout() end)
 end
 
 return _G
