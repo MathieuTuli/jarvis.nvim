@@ -68,6 +68,7 @@ require("jarvis").setup({
     make_curl_args=make_openai_curl_args,
     prune_after = 30,
     cache_limit = 1000,
+    persistent_prompt_history = true,
     keymaps = {
         close = "<esc>", -- close the ui
         new_chat = "<C-n>", -- create new persistent, file-agnostic chat file
@@ -131,10 +132,11 @@ keymaps = {
     - fuzzy find by content
     - fuzzy find by filename
 1. Look at the [link](https://github.com/MunifTanjim/nui.nvim/wiki/nui.layout) for how to unmount and clean everything
+1. Fix layout update bug with not enough lines
 1. Default support for models?
-- Local
-- Anthropic
-- Groq
+    - Local
+    - Anthropic
+    - Groq
 
 ### Fixed
 1. Add configurable options
