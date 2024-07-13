@@ -97,7 +97,7 @@ function _G.interact(type)
             style = "rounded",
             padding = { 0, 0 },
             text = {
-                top = type == "chat" and "/Chat History/" or "/../" .. fname .. " History/",
+                top = type == "chat" and "Chat History" or "../" .. fname .. " History",
                 top_align = "center",
             },
         },
@@ -120,7 +120,7 @@ function _G.interact(type)
             style = "rounded",
             padding = { 0, 0 },
             text = {
-                top = "/Prompt/",
+                top = "Prompt",
                 top_align = "center",
             },
         },
@@ -146,7 +146,6 @@ function _G.interact(type)
         Layout.Box(_L.prompt_popup, { size = { width = "100%", height = 3 } }),
     }, { dir = "col" })
     )
-
     _L.layout:mount()
 
     if _L.parent_visual_selection then
