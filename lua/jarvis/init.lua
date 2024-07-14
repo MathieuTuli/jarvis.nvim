@@ -78,8 +78,32 @@ function _L.forward()
     LLM.get_response_and_stream_to_buffer(
     _L.history_popup.winid, _L.history_popup.bufnr,
     _L.prompt_popup.winid, _L.prompt_popup.bufnr)
+    _L.update_layout()
     _L.history_lines_to_clear.first = nil
     _L.history_lines_to_clear.last = nil
+end
+
+function _L.update_layout()
+    local lines = vim.api.nvim_buf_get_lines(_L.prompt_popup.bufnr, 0, -1, false)
+    local current_line_count = #lines
+    current_line_count = math.min(15, current_line_count - 1)
+    if current_line_count ~= _L.prompt_line_count then
+        _L.prompt_line_count = current_line_count
+        _L.layout:update(
+        {
+            position = "50%",
+            relative = "editor",
+            size = {
+                width = "90%",
+                height = "90%",
+            },
+        },
+        Layout.Box({
+            Layout.Box(_L.history_popup, { grow = 1 }),
+            Layout.Box(_L.prompt_popup, { size = { width = "100%", height = 3 + current_line_count}})
+        }, { dir = "col" })
+        )
+    end
 end
 
 function _G.interact(type)
@@ -198,31 +222,9 @@ function _G.interact(type)
     _L.prompt_popup:on(event.TabLeave, function()
         _L.close()
     end)
-    local function update_layout()
-        local lines = vim.api.nvim_buf_get_lines(_L.prompt_popup.bufnr, 0, -1, false)
-        local current_line_count = #lines
-        current_line_count = math.min(15, current_line_count - 1)
-        if current_line_count ~= _L.prompt_line_count then
-            _L.prompt_line_count = current_line_count
-            _L.layout:update(
-            {
-                position = "50%",
-                relative = "editor",
-                size = {
-                    width = "90%",
-                    height = "90%",
-                },
-            },
-            Layout.Box({
-                Layout.Box(_L.history_popup, { grow = 1 }),
-                Layout.Box(_L.prompt_popup, { size = { width = "100%", height = 3 + current_line_count}})
-            }, { dir = "col" })
-            )
-        end
-    end
-    _L.prompt_popup:on(event.TextChangedI, function() update_layout() end)
-    _L.prompt_popup:on(event.TextChanged, function() update_layout() end)
-    _L.prompt_popup:on(event.TextChanged, function() update_layout() end)
+    _L.prompt_popup:on(event.TextChangedI, function() _L.update_layout() end)
+    _L.prompt_popup:on(event.TextChanged, function() _L.update_layout() end)
+    _L.prompt_popup:on(event.TextChanged, function() _L.update_layout() end)
 end
 
 return _G
