@@ -26,7 +26,7 @@ local function parse_history(history)
     local current_role = nil
 
     for line in history:gmatch("[^\r\n]+") do
-        local _, type = line:match("^# %$%$([A-Z_]+)%$%$ (.+)$")
+        local type, _ = line:match("^# >>>>> (.+)$")
         if type then
             if type:lower() == "response" then
                 current_role = "assistant"
@@ -81,9 +81,9 @@ local active_job = nil
 function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prompt_winid, prompt_bufnr)
     local history_lines = vim.api.nvim_buf_get_lines(history_bufnr, 0, -1, false)
     local prompt_lines = vim.api.nvim_buf_get_lines(prompt_bufnr, 0, -1, false)
-    Utils.stream_to_buffer(history_bufnr, "\n# $$BLOCK$$ Prompt")
+    Utils.stream_to_buffer(history_bufnr, "\n# >>>>> Prompt")
     Utils.stream_to_buffer(history_bufnr, prompt_lines)
-    Utils.stream_to_buffer(history_bufnr, "\n# $$BLOCK$$ Response\n")
+    Utils.stream_to_buffer(history_bufnr, "\n# >>>>> Response\n")
     Utils.clear_buffer(prompt_bufnr)
     vim.api.nvim_set_current_win(history_winid)
     Utils.move_cursor_to_bottom(history_winid, history_bufnr)
