@@ -92,14 +92,16 @@ function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prom
     print(vim.api.nvim_buf_get_name(history_bufnr))
     local args = _G.make_curl_args(parse_history(table.concat(history_lines, "\n")), table.concat(prompt_lines, "\n"))
 
+    local curr_event_state = nil
+
     local function parse_and_call(line)
         local event = line:match '^event: (.+)$'
         if event then
-            return
+            curr_event_state = event
         end
         local data_match = line:match '^data: (.+)$'
         if data_match then
-            local content = _G.data_handler(data_match)
+            local content = _G.data_handler(data_match, curr_event_state)
             if content then
                 vim.schedule(function()
                     Utils.stream_to_buffer_at_cursor(history_winid, content)
@@ -119,7 +121,9 @@ function _G.get_response_and_stream_to_buffer(history_winid, history_bufnr, prom
         on_stdout = function(_, out)
             parse_and_call(out)
         end,
-        on_stderr = function(_, _) end,
+        on_stderr = function(_, out)
+            print(out)
+        end,
         on_exit = function()
             vim.schedule(function()
                 Utils.move_cursor_to_bottom(history_winid, history_bufnr)

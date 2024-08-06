@@ -141,6 +141,8 @@ keymaps = {
 ```
 
 ### TODO
+1. Return context to previously opened split/window
+1. Update Context to prepend to current prompt
 1. Job cancel + don't run job if prompt is empty + let job run in background buffre if you close window while its streaming
 1. Make history window read-only during response stream
 1. Fuzzy find previous interactions easily and open/swap between them quickly
